@@ -6,19 +6,75 @@
  * @flow
  */
 
-import React, {Component} from 'react';
-import {StyleSheet, Text, View, Image} from 'react-native';
+import React, { Component } from 'react';
+import { StyleSheet, View } from 'react-native';
+import RNLocation from 'react-native-location';
+import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
+import { getScooters } from '../redux/actions';
 
 let iconApp = require('../../static/images/Icon_app.png');
 
 type Props = {};
 export default class App extends Component<Props> {
+  constructor() {
+    super();
+
+    // Set initial state, will change on GPS update
+    this.state = {
+      location: {
+        latitude: 41.4045646,
+        longitude: 2.1641372
+      }
+    };
+    this.scooters = getScooters();
+  }
+
+  componentDidMount() {
+    RNLocation.requestPermission({
+      ios: 'whenInUse',
+      android: {
+        detail: 'fine'
+      }
+    }).then(granted => {
+      granted ? this._startUpdatingLocation() : console.log(granted);
+    });
+  }
+
+  _startUpdatingLocation = () => {
+    this.locationSubscription = RNLocation.subscribeToLocationUpdates(
+      locations => {
+        this.setState({ location: locations[0] });
+        console.log(locations);
+      }
+    );
+  };
+
+  _stopUpdatingLocation = () => {
+    this.locationSubscription && this.locationSubscription();
+    this.setState({ location: null });
+  };
+
+  getMapRegion = () => {
+    console.log(this.state.location.latitude);
+    return {
+      latitude: this.state.location.latitude,
+      longitude: this.state.location.longitude,
+      latitudeDelta: 0.015,
+      longitudeDelta: 0.0121
+    };
+  };
 
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>Welcome to Tiny Yego!</Text>
-        <Image source={iconApp} style={styles.iconApp}/>
+        <MapView
+          provider={PROVIDER_GOOGLE} // remove if not using Google Maps
+          style={styles.map}
+          region={this.getMapRegion()}
+          loadingEnabled
+          onRegionChange={this.getMapRegion}
+        />
+        {this.scooters && console.log(this.scooters)}
       </View>
     );
   }
@@ -26,18 +82,11 @@ export default class App extends Component<Props> {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'flex-end',
+    alignItems: 'center'
   },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 20,
-  },
-  iconApp: {
-    height: 150,
-    width: 150
+  map: {
+    ...StyleSheet.absoluteFillObject
   }
 });
