@@ -10,12 +10,14 @@ import React, { Component } from 'react';
 import { StyleSheet, View } from 'react-native';
 import RNLocation from 'react-native-location';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
+import { connect } from 'react-redux';
 import { getScooters } from '../redux/actions';
 
 let iconApp = require('../../static/images/Icon_app.png');
 
 type Props = {};
-export default class App extends Component<Props> {
+
+class App extends Component<Props> {
   constructor() {
     super();
 
@@ -26,10 +28,11 @@ export default class App extends Component<Props> {
         longitude: 2.1641372
       }
     };
-    this.scooters = getScooters();
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    this.props.getScooters();
+    console.log('aquiiiiiiiiiiiiiii', this.props);
     RNLocation.requestPermission({
       ios: 'whenInUse',
       android: {
@@ -55,7 +58,6 @@ export default class App extends Component<Props> {
   };
 
   getMapRegion = () => {
-    console.log(this.state.location.latitude);
     return {
       latitude: this.state.location.latitude,
       longitude: this.state.location.longitude,
@@ -74,7 +76,7 @@ export default class App extends Component<Props> {
           loadingEnabled
           onRegionChange={this.getMapRegion}
         />
-        {this.scooters && console.log(this.scooters)}
+        {this.props && console.log('props', this.props.scooters)}
       </View>
     );
   }
@@ -90,3 +92,18 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject
   }
 });
+
+const mapStateToProps = (state, props) => {
+  return {
+    scooters: state.scooters
+  };
+};
+
+const mapDispatchToProps = {
+  getScooters
+};
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(App);
