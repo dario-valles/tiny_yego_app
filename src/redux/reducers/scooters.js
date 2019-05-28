@@ -1,4 +1,5 @@
 import { GET_SCOOTERS } from '../types';
+
 const initialState = {
   scooters: []
 };
@@ -6,9 +7,10 @@ const initialState = {
 export default function reducer(state = initialState, action) {
   switch (action.type) {
     case GET_SCOOTERS:
-      console.log('holaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
-      scooters: [...action.payload];
-
+      return {
+        ...state,
+        scooters: [...action.payload]
+      };
     default:
       console.log(action.type);
       return state;

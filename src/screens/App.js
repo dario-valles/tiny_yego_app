@@ -7,11 +7,12 @@
  */
 
 import React, { Component } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Text, Button } from 'react-native';
 import RNLocation from 'react-native-location';
-import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE, Callout, Marker } from 'react-native-maps';
 import { connect } from 'react-redux';
 import { getScooters } from '../redux/actions';
+import { getDistance } from 'geolib';
 
 let iconApp = require('../../static/images/Icon_app.png');
 
@@ -30,9 +31,8 @@ class App extends Component<Props> {
     };
   }
 
-  async componentDidMount() {
+  componentDidMount() {
     this.props.getScooters();
-    console.log('aquiiiiiiiiiiiiiii', this.props);
     RNLocation.requestPermission({
       ios: 'whenInUse',
       android: {
@@ -47,7 +47,6 @@ class App extends Component<Props> {
     this.locationSubscription = RNLocation.subscribeToLocationUpdates(
       locations => {
         this.setState({ location: locations[0] });
-        console.log(locations);
       }
     );
   };
@@ -66,6 +65,20 @@ class App extends Component<Props> {
     };
   };
 
+  getDistanceScooter = scooters => {
+    scooters.forEach(scooter => {
+      scooter.distance = getDistance(
+        {
+          latitude: this.state.location.latitude,
+          longitude: this.state.location.longitude
+        },
+        { latitude: scooter.lat, longitude: scooter.lng }
+      );
+    });
+
+    return scooters;
+  };
+
   render() {
     return (
       <View style={styles.container}>
@@ -75,8 +88,33 @@ class App extends Component<Props> {
           region={this.getMapRegion()}
           loadingEnabled
           onRegionChange={this.getMapRegion}
-        />
-        {this.props && console.log('props', this.props.scooters)}
+          onMarkerPress={e => console.log(e.currentTarget)}
+        >
+          {this.props.scooters.scooters.length &&
+            this.getDistanceScooter(this.props.scooters.scooters)
+              .sort((a, b) => a.distance - b.distance)
+              .map((scoter, index) => {
+                return (
+                  <Marker
+                    key={index}
+                    pinColor={
+                      scoter.status === 0
+                        ? 'orange'
+                        : scoter.status === 1
+                        ? '#000000'
+                        : 'red'
+                    }
+                    coordinate={{ latitude: scoter.lat, longitude: scoter.lng }}
+                  />
+                );
+              })}
+        </MapView>
+        <View style={styles.scooterInfo}>
+          <Button title='Left' />
+          <Text>Hola</Text>
+          <Button title='Center' onPress={() => this.getMapRegion()} />
+          <Button title='Right' />
+        </View>
       </View>
     );
   }
@@ -89,7 +127,12 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   map: {
-    ...StyleSheet.absoluteFillObject
+    ...StyleSheet.absoluteFillObject,
+    height: '80%'
+  },
+  scooterInfo: {
+    justifyContent: 'space-between',
+    flexDirection: 'row'
   }
 });
 
