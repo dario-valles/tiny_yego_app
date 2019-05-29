@@ -10,10 +10,10 @@ let calculateDistance = false;
 
 const App = props => {
   const initialLoaction = { latitude: 41.4045646, longitude: 2.1641372 };
-  // const [refresh, setRefresh] = useState(false);
   const [location, setLocation] = useState(initialLoaction);
   const [centerMap, setCenterMap] = useState(initialLoaction);
   const [selectedScooter, setSelectedScooter] = useState({});
+  const [refresh, setRefresh] = useState(false);
 
   useEffect(() => {
     //props.cleanScooters();
@@ -42,7 +42,7 @@ const App = props => {
   }, [selectedScooter]);
 
   // useEffect(() => {
-  //   console.log('CAHNGEDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD');
+  //   calculateDistance = true
   //   setSelectedScooter({});
   //   const getSc = async () => {
   //     await props.cleanScooters();
