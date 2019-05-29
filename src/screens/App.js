@@ -1,11 +1,3 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow
- */
-
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Button } from 'react-native';
 import RNLocation from 'react-native-location';
@@ -18,12 +10,13 @@ let calculateDistance = false;
 
 const App = props => {
   const initialLoaction = { latitude: 41.4045646, longitude: 2.1641372 };
+  // const [refresh, setRefresh] = useState(false);
   const [location, setLocation] = useState(initialLoaction);
   const [centerMap, setCenterMap] = useState(initialLoaction);
   const [selectedScooter, setSelectedScooter] = useState({});
 
   useEffect(() => {
-    props.cleanScooters();
+    //props.cleanScooters();
     const getSc = async () => {
       await props.getScooters();
       getDistanceScooter();
@@ -47,6 +40,18 @@ const App = props => {
       });
     }
   }, [selectedScooter]);
+
+  // useEffect(() => {
+  //   console.log('CAHNGEDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD');
+  //   setSelectedScooter({});
+  //   const getSc = async () => {
+  //     await props.cleanScooters();
+  //     await props.getScooters();
+  //     getDistanceScooter();
+  //   };
+  //   getSc();
+  //   setCenterMap(location);
+  // }, [refresh]);
 
   _startUpdatingLocation = () => {
     locationSubscription = RNLocation.subscribeToLocationUpdates(locations => {
@@ -95,25 +100,25 @@ const App = props => {
       : 'red';
   };
 
-  checkEnableButton = () => {
-    const currentScooterIndexFiltered = props.scooters
-      .filter(scooter => scooter.status === 0)
-      .findIndex(scooter => scooter.id === selectedScooter.id);
-    return currentScooterIndexFiltered === 0;
-  };
-
-  getPrev = () => {
-    const currentScooterIndexFiltered = props.scooters
-      .filter(scooter => scooter.status === 0)
-      .findIndex(scooter => scooter.id === selectedScooter.id);
-    console.log('antes', selectedScooter);
-    setSelectedScooter(
-      props.scooters.filter(scooter => scooter.status === 0)[
-        currentScooterIndexFiltered - 1
-      ]
+  const getValidScooters = () => {
+    return props.scooters.filter(
+      scooter => scooter.status === 0 && scooter.distance <= 1200
     );
   };
-  getNext = () => {};
+
+  const getCurrentScooterIndex = () =>
+    getValidScooters().findIndex(scooter => scooter.id === selectedScooter.id);
+
+  checkEnablePrevButton = () => getCurrentScooterIndex() === 0;
+
+  checkEnableNextButton = () =>
+    getValidScooters().length - 1 <= getCurrentScooterIndex();
+
+  getPrev = () =>
+    setSelectedScooter(getValidScooters()[getCurrentScooterIndex() - 1]);
+
+  getNext = () =>
+    setSelectedScooter(getValidScooters()[getCurrentScooterIndex() + 1]);
 
   return (
     <View style={styles.container}>
@@ -122,16 +127,9 @@ const App = props => {
         style={styles.map}
         region={getMapRegion()}
         loadingEnabled
+        showsUserLocation={true}
         onMarkerPress={e => console.log(e.currentTarget)}
       >
-        <Marker
-          key='UserMarker'
-          pinColor='green'
-          coordinate={{
-            latitude: location.latitude,
-            longitude: location.longitude
-          }}
-        />
         {calculateDistance === true &&
           props.scooters.map((scooter, index) => {
             return (
@@ -159,7 +157,9 @@ const App = props => {
           <Button
             title='Prev.'
             onPress={getPrev}
-            disabled={selectedScooter.id !== undefined && checkEnableButton()}
+            disabled={
+              selectedScooter.id !== undefined && checkEnablePrevButton()
+            }
           />
           <Button title='Refresh' />
         </View>
@@ -169,7 +169,13 @@ const App = props => {
           <Text>Distance: {selectedScooter.distance}</Text>
         </View>
         <View style={styles.buttons}>
-          <Button title='Next' onPress={getNext} />
+          <Button
+            title='Next'
+            onPress={getNext}
+            disabled={
+              selectedScooter.id !== undefined && checkEnableNextButton()
+            }
+          />
           <Button title='Center' onPress={() => setCenterMap(location)} />
         </View>
       </View>
@@ -201,7 +207,6 @@ const styles = StyleSheet.create({
 });
 
 const mapStateToProps = (state, props) => {
-  console.log('CALLED');
   return state.scooters;
 };
 
