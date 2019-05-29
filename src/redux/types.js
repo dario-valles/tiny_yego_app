@@ -1,1 +1,3 @@
 export const GET_SCOOTERS = 'GET_SCOOTERS';
+export const UPDATE_SCOOTERS = 'UPDATE_SCOOTERS';
+export const CLEAN_SCOOTERS = 'CLEAN_SCOOTERS';
