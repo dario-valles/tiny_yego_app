@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 const requestHelper = axios.create({
-  baseURL: 'https://alphaone.getyugo.com/api/v1',
+  baseURL: '',
   params: {
-    api_token: '***REMOVED***'
+    api_token: ''
   }
 });
 
