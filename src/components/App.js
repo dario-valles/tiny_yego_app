@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Button } from 'react-native';
 import RNLocation from 'react-native-location';
-import { ScooterMap } from './scooterMap';
 import { connect } from 'react-redux';
 import { getScooters, updatedScooters, cleanScooters } from '../redux/actions';
 import { getDistanceScooter } from '../utils/utils';
+import { ScooterMap } from './scooterMap';
+import { ToolBox } from './ToolBox';
 
 const App = ({ cleanScooters, getScooters, scooters, updatedScooters }) => {
   const initialLoaction = { latitude: 41.4045646, longitude: 2.1641372 };
@@ -69,20 +70,6 @@ const App = ({ cleanScooters, getScooters, scooters, updatedScooters }) => {
     );
   };
 
-  const getValidScooters = () => {
-    return scooters.filter(
-      scooter => scooter.status === 0 && scooter.distance <= 1200
-    );
-  };
-
-  const getCurrentScooterIndex = () =>
-    getValidScooters().findIndex(scooter => scooter.id === selectedScooter.id);
-
-  checkEnablePrevButton = () => getCurrentScooterIndex() === 0;
-
-  checkEnableNextButton = () =>
-    getValidScooters().length - 1 <= getCurrentScooterIndex();
-
   moveToScooter = next => {
     const selected = getValidScooters()[
       getCurrentScooterIndex() + (next ? 1 : -1)
@@ -102,33 +89,15 @@ const App = ({ cleanScooters, getScooters, scooters, updatedScooters }) => {
         setSelectedScooter={setSelectedScooter}
         getMapRegion={getMapRegion}
       />
-      <View style={styles.scooterInfo}>
-        <View style={styles.buttons}>
-          <Button
-            title='Prev.'
-            onPress={() => moveToScooter(false)}
-            disabled={
-              selectedScooter.id !== undefined && checkEnablePrevButton()
-            }
-          />
-          <Button title='Refresh' onPress={() => setRefresh(!refresh)} />
-        </View>
-        <View style={styles.currentScooter}>
-          <Text>Name:{selectedScooter.name}</Text>
-          <Text>Batery: {selectedScooter.battery}</Text>
-          <Text>Distance: {selectedScooter.distance}</Text>
-        </View>
-        <View style={styles.buttons}>
-          <Button
-            title='Next'
-            onPress={() => moveToScooter(true)}
-            disabled={
-              selectedScooter.id !== undefined && checkEnableNextButton()
-            }
-          />
-          <Button title='Center' onPress={() => setCenterMap(location)} />
-        </View>
-      </View>
+      <ToolBox
+        scooters={scooters}
+        selectedScooter={selectedScooter}
+        setRefresh={setRefresh}
+        refresh={refresh}
+        setCenterMap={setCenterMap}
+        location={location}
+        moveToScooter={moveToScooter}
+      />
     </View>
   );
 };
