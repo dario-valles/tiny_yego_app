@@ -28,6 +28,7 @@ const App = ({ cleanScooters, getScooters, scooters, updatedScooters }) => {
     }).then(granted => {
       if (granted) _startUpdatingLocation();
     });
+    return () => _stopUpdatingLocation();
   }, []);
 
   useEffect(() => {
@@ -42,10 +43,14 @@ const App = ({ cleanScooters, getScooters, scooters, updatedScooters }) => {
   }, [refresh]);
 
   _startUpdatingLocation = () => {
-    locationSubscription = RNLocation.subscribeToLocationUpdates(locations => {
-      setLocation(locations[0]);
-    });
+    const locationSubscription = RNLocation.subscribeToLocationUpdates(
+      locations => {
+        setLocation(locations[0]);
+      }
+    );
   };
+
+  _stopUpdatingLocation = () => setLocation({});
 
   getMapRegion = (type = centerMap || location) => {
     return {

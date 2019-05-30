@@ -19,7 +19,6 @@ export default function reducer(state = initialState, action) {
       };
 
     default:
-      console.log(action.type);
       return state;
   }
 }
