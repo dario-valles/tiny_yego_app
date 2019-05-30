@@ -77,7 +77,7 @@ const App = props => {
     };
   };
 
-  getDistanceScooter = (scooters = scooters) => {
+  getDistanceScooter = () => {
     if (calculateDistance === false) {
       scooters.forEach(scooter => {
         scooter.distance = getDistance(
