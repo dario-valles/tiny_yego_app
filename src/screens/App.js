@@ -4,12 +4,7 @@ import RNLocation from 'react-native-location';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import { connect } from 'react-redux';
 import { getScooters, updatedScooters, cleanScooters } from '../redux/actions';
-import { getDistance } from 'geolib';
-
-const aviableScooterImage = require('../../static/images/markers/iconscooter_avail.png');
-const bookedScooterImage = require('../../static/images/markers/iconscooter_booked.png');
-const alertScooterImage = require('../../static/images/markers/iconscooter_alert.png');
-const selectedScooterImage = require('../../static/images/markers/iconscooter_disabled.png');
+import { getDistanceScooter, scooterColor } from '../utils/utils';
 
 let calculateDistance = false;
 
@@ -29,7 +24,7 @@ const App = props => {
       const getSc = async () => {
         await cleanScooters();
         await getScooters();
-        getDistanceScooter();
+        updateDistanceScooters();
       };
       getSc();
       setCenterMap(location);
@@ -40,7 +35,7 @@ const App = props => {
     //cleanScooters();
     const getSc = async () => {
       await getScooters();
-      getDistanceScooter();
+      updateDistanceScooters();
     };
     getSc();
     RNLocation.requestPermission({
@@ -77,31 +72,13 @@ const App = props => {
     };
   };
 
-  getDistanceScooter = () => {
-    if (calculateDistance === false) {
-      scooters.forEach(scooter => {
-        scooter.distance = getDistance(
-          {
-            latitude: location.latitude,
-            longitude: location.longitude
-          },
-          { latitude: scooter.lat, longitude: scooter.lng }
-        );
-      });
-      scooters.sort((a, b) => a.distance - b.distance);
-      setSelectedScooter(scooters.filter(scooter => scooter.status === 0)[0]);
-      calculateDistance = true;
-      updatedScooters(scooters);
-    }
-  };
-
-  scooterColor = scooter => {
-    if (selectedScooter.id === scooter.id) return selectedScooterImage;
-    return scooter.status === 0
-      ? aviableScooterImage
-      : scooter.status === 1
-      ? bookedScooterImage
-      : alertScooterImage;
+  updateDistanceScooters = () => {
+    const updatedDistanceScooters = getDistanceScooter(scooters, location);
+    setSelectedScooter(
+      updatedDistanceScooters.filter(scooter => scooter.status === 0)[0]
+    );
+    calculateDistance = true;
+    updatedScooters(updatedDistanceScooters);
   };
 
   const getValidScooters = () => {
@@ -139,7 +116,7 @@ const App = props => {
           scooters.map((scooter, index) => {
             return (
               <Marker
-                image={scooterColor(scooter)}
+                image={scooterColor(selectedScooter, scooter)}
                 key={index}
                 coordinate={{ latitude: scooter.lat, longitude: scooter.lng }}
                 onPress={() =>
