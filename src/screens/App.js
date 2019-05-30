@@ -6,6 +6,11 @@ import { connect } from 'react-redux';
 import { getScooters, updatedScooters, cleanScooters } from '../redux/actions';
 import { getDistance } from 'geolib';
 
+const aviableScooterImage = require('../../static/images/markers/iconscooter_avail.png');
+const bookedScooterImage = require('../../static/images/markers/iconscooter_booked.png');
+const alertScooterImage = require('../../static/images/markers/iconscooter_alert.png');
+const selectedScooterImage = require('../../static/images/markers/iconscooter_disabled.png');
+
 let calculateDistance = false;
 
 const App = props => {
@@ -15,10 +20,26 @@ const App = props => {
   const [selectedScooter, setSelectedScooter] = useState({});
   const [refresh, setRefresh] = useState(false);
 
+  const { cleanScooters, getScooters, scooters } = props;
+
   useEffect(() => {
-    //props.cleanScooters();
+    if (calculateDistance) {
+      calculateDistance = false;
+      setSelectedScooter({});
+      const getSc = async () => {
+        await cleanScooters();
+        await getScooters();
+        getDistanceScooter();
+      };
+      getSc();
+      setCenterMap(location);
+    }
+  }, [refresh]);
+
+  useEffect(() => {
+    //cleanScooters();
     const getSc = async () => {
-      await props.getScooters();
+      await getScooters();
       getDistanceScooter();
     };
     getSc();
@@ -28,7 +49,7 @@ const App = props => {
         detail: 'fine'
       }
     }).then(granted => {
-      granted ? _startUpdatingLocation() : console.log(granted);
+      if (granted) _startUpdatingLocation();
     });
   }, []);
 
@@ -41,28 +62,11 @@ const App = props => {
     }
   }, [selectedScooter]);
 
-  // useEffect(() => {
-  //   calculateDistance = true
-  //   setSelectedScooter({});
-  //   const getSc = async () => {
-  //     await props.cleanScooters();
-  //     await props.getScooters();
-  //     getDistanceScooter();
-  //   };
-  //   getSc();
-  //   setCenterMap(location);
-  // }, [refresh]);
-
   _startUpdatingLocation = () => {
     locationSubscription = RNLocation.subscribeToLocationUpdates(locations => {
       setLocation(locations[0]);
     });
   };
-
-  // _stopUpdatingLocation = () => {
-  //   locationSubscription && locationSubscription();
-  //   setLocation(initialLoaction);
-  // };
 
   getMapRegion = (type = centerMap || location) => {
     return {
@@ -73,7 +77,7 @@ const App = props => {
     };
   };
 
-  getDistanceScooter = (scooters = props.scooters) => {
+  getDistanceScooter = (scooters = scooters) => {
     if (calculateDistance === false) {
       scooters.forEach(scooter => {
         scooter.distance = getDistance(
@@ -87,21 +91,21 @@ const App = props => {
       scooters.sort((a, b) => a.distance - b.distance);
       setSelectedScooter(scooters.filter(scooter => scooter.status === 0)[0]);
       calculateDistance = true;
-      props.updatedScooters(scooters);
+      updatedScooters(scooters);
     }
   };
 
   scooterColor = scooter => {
-    if (selectedScooter.id === scooter.id) return 'blue';
+    if (selectedScooter.id === scooter.id) return selectedScooterImage;
     return scooter.status === 0
-      ? 'orange'
+      ? aviableScooterImage
       : scooter.status === 1
-      ? 'black'
-      : 'red';
+      ? bookedScooterImage
+      : alertScooterImage;
   };
 
   const getValidScooters = () => {
-    return props.scooters.filter(
+    return scooters.filter(
       scooter => scooter.status === 0 && scooter.distance <= 1200
     );
   };
@@ -129,26 +133,19 @@ const App = props => {
         loadingEnabled
         showsUserLocation={true}
         onMarkerPress={e => console.log(e.currentTarget)}
+        moveOnMarkerPress={false}
       >
         {calculateDistance === true &&
-          props.scooters.map((scooter, index) => {
+          scooters.map((scooter, index) => {
             return (
               <Marker
+                image={scooterColor(scooter)}
                 key={index}
                 coordinate={{ latitude: scooter.lat, longitude: scooter.lng }}
                 onPress={() =>
                   scooter.status === 0 && setSelectedScooter(scooter)
                 }
-              >
-                <View
-                  style={{
-                    backgroundColor: scooterColor(scooter),
-                    padding: 10
-                  }}
-                >
-                  <Text>{scooter.battery}</Text>
-                </View>
-              </Marker>
+              />
             );
           })}
       </MapView>
@@ -161,7 +158,7 @@ const App = props => {
               selectedScooter.id !== undefined && checkEnablePrevButton()
             }
           />
-          <Button title='Refresh' />
+          <Button title='Refresh' onPress={() => setRefresh(!refresh)} />
         </View>
         <View style={styles.currentScooter}>
           <Text>Name:{selectedScooter.name}</Text>
@@ -190,8 +187,7 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   map: {
-    ...StyleSheet.absoluteFillObject,
-    height: '80%'
+    ...StyleSheet.absoluteFillObject
   },
   scooterInfo: {
     flexDirection: 'row',
@@ -202,7 +198,8 @@ const styles = StyleSheet.create({
   },
   currentScooter: {
     width: '60%',
-    alignItems: 'center'
+    alignItems: 'center',
+    backgroundColor: 'white'
   }
 });
 
