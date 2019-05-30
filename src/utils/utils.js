@@ -6,17 +6,20 @@ const alertScooterImage = require('../../static/images/markers/iconscooter_alert
 const selectedScooterImage = require('../../static/images/markers/iconscooter_disabled.png');
 
 export const getDistanceScooter = (scooters, userLocation) => {
-  scooters.forEach(scooter => {
-    scooter.distance = getDistance(
-      {
-        latitude: userLocation.latitude,
-        longitude: userLocation.longitude
-      },
-      { latitude: scooter.lat, longitude: scooter.lng }
-    );
+  const resultScooters = scooters.map(scooter => {
+    return {
+      ...scooter,
+      distance: getDistance(
+        {
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude
+        },
+        { latitude: scooter.lat, longitude: scooter.lng }
+      )
+    };
   });
-  scooters.sort((a, b) => a.distance - b.distance);
-  return scooters;
+  resultScooters.sort((a, b) => a.distance - b.distance);
+  return resultScooters;
 };
 
 export const scooterColor = (selectedScooter, scooter) => {

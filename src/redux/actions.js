@@ -17,13 +17,11 @@ export const cleanedScooters = payload => ({
 });
 
 export const getScooters = () => async dispatch => {
-  console.log('LLAMADAAAAAAAAAAAAAAAAAAAAAAAAAAAa');
   const response = await api.scooters.get();
   return dispatch(receivedScooters(response.data));
 };
 
 export const updatedScooters = scooters => dispatch => {
-  console.log('aquiiiiiiiiiiiiiiiiiii', scooters);
   return dispatch(updateScooters(scooters));
 };
 
