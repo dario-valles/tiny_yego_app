@@ -18,6 +18,7 @@ export const getDistanceScooter = (scooters, userLocation) => {
       )
     };
   });
+  console.log(resultScooters);
   resultScooters.sort((a, b) => a.distance - b.distance);
   return resultScooters;
 };

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Button } from 'react-native';
 import RNLocation from 'react-native-location';
-import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
+import { ScooterMap } from './scooterMap';
 import { connect } from 'react-redux';
 import { getScooters, updatedScooters, cleanScooters } from '../redux/actions';
-import { getDistanceScooter, scooterColor } from '../utils/utils';
+import { getDistanceScooter } from '../utils/utils';
 
 const App = ({ cleanScooters, getScooters, scooters, updatedScooters }) => {
   const initialLoaction = { latitude: 41.4045646, longitude: 2.1641372 };
@@ -14,7 +14,7 @@ const App = ({ cleanScooters, getScooters, scooters, updatedScooters }) => {
   const [refresh, setRefresh] = useState(false);
 
   useEffect(() => {
-    //cleanScooters();
+    // cleanScooters();
     const getSc = async () => {
       await getScooters();
       updateDistanceScooters();
@@ -52,14 +52,14 @@ const App = ({ cleanScooters, getScooters, scooters, updatedScooters }) => {
 
   _stopUpdatingLocation = () => setLocation({});
 
-  getMapRegion = (type = centerMap || location) => {
+  function getMapRegion(type = centerMap || location) {
     return {
       latitude: type.latitude,
       longitude: type.longitude,
       latitudeDelta: 0.015,
       longitudeDelta: 0.0121
     };
-  };
+  }
 
   updateDistanceScooters = () => {
     const updatedDistanceScooters = getDistanceScooter(scooters, location);
@@ -96,29 +96,12 @@ const App = ({ cleanScooters, getScooters, scooters, updatedScooters }) => {
 
   return (
     <View style={styles.container}>
-      <MapView
-        provider={PROVIDER_GOOGLE}
-        style={styles.map}
-        region={getMapRegion()}
-        loadingEnabled
-        showsUserLocation={true}
-        moveOnMarkerPress={false}
-      >
-        {scooters.length > 0 &&
-          scooters[0].distance !== undefined &&
-          scooters.map((scooter, index) => {
-            return (
-              <Marker
-                image={scooterColor(selectedScooter, scooter)}
-                key={index}
-                coordinate={{ latitude: scooter.lat, longitude: scooter.lng }}
-                onPress={() =>
-                  scooter.status === 0 && setSelectedScooter(scooter)
-                }
-              />
-            );
-          })}
-      </MapView>
+      <ScooterMap
+        scooters={scooters}
+        selectedScooter={selectedScooter}
+        setSelectedScooter={setSelectedScooter}
+        getMapRegion={getMapRegion}
+      />
       <View style={styles.scooterInfo}>
         <View style={styles.buttons}>
           <Button
@@ -155,9 +138,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'flex-end',
     alignItems: 'center'
-  },
-  map: {
-    ...StyleSheet.absoluteFillObject
   },
   scooterInfo: {
     flexDirection: 'row',
